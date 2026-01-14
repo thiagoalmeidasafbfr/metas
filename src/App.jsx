@@ -29,7 +29,8 @@ import {
   Trophy, 
   Wallet,
   Plus,
-  Search
+  Search,
+  Calendar
 } from 'lucide-react';
 
 // --- FIREBASE IMPORTS ---
@@ -190,23 +191,6 @@ const StatusDialog = ({ status, onClose }) => {
   );
 };
 
-const ConfirmDialog = ({ isOpen, message, onConfirm, onCancel, isDestructive }) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full animate-scale-in">
-        {isDestructive && <div className="flex justify-center mb-4"><div className="bg-red-100 p-3 rounded-full"><AlertTriangle className="w-8 h-8 text-red-600" /></div></div>}
-        <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Confirmação</h3>
-        <p className="text-gray-600 mb-6 text-center">{message}</p>
-        <div className="flex gap-3 justify-center">
-          <button onClick={onCancel} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">Cancelar</button>
-          <button onClick={onConfirm} className={`px-4 py-2 text-white rounded-lg transition font-medium ${isDestructive ? 'bg-red-600 hover:bg-red-700' : 'bg-black hover:bg-gray-800'}`}>Sim, confirmar</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Ruler = ({ value }) => {
   const displayValue = Math.min(Math.max(Number(value) || 0, 0), 130);
   return (
@@ -230,12 +214,15 @@ const GoalCard = ({ goal, history }) => {
   const isWorldCup = goal.kpi && String(goal.kpi).toLowerCase().includes('copa do mundo de clubes');
   const mainTitle = (goal.kr && goal.kr !== '-') ? goal.kr : goal.kpi;
   const subTitle = (goal.kpi && goal.kpi !== '-' && goal.kpi !== mainTitle) ? goal.kpi : null;
+  const isConcluida = goal.status === 'Concluída';
 
   return (
-    <div className={`bg-white border ${isWorldCup ? 'border-yellow-400 ring-2 ring-yellow-100' : 'border-gray-100'} rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden`}>
+    <div className={`bg-white border ${isWorldCup ? 'border-yellow-400 ring-2 ring-yellow-100' : isConcluida ? 'border-green-200 ring-1 ring-green-50' : 'border-gray-100'} rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden`}>
       <div className="absolute top-0 right-0 w-32 h-32 bg-gray-50 rounded-bl-full -mr-10 -mt-10 z-0"></div>
       <div className="relative z-10">
         {isWorldCup && <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20 flex items-center gap-1"><Trophy className="w-3 h-3" /> META EXTRA (+20%)</div>}
+        {isConcluida && !isWorldCup && <div className="absolute top-0 right-0 bg-green-100 text-green-800 text-[10px] font-bold px-3 py-1 rounded-bl-lg shadow-sm z-20 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> CONCLUÍDA</div>}
+        
         <div className="mb-6">
           <div className="flex justify-between items-start">
             <span className={`inline-block px-2 py-1 rounded text-xs font-bold uppercase tracking-wider mb-2 ${normalizeText(goal.tipo) === 'global' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{goal.tipo || 'Organizacional'}</span>
@@ -361,7 +348,7 @@ const LoginScreen = ({ onLogin, users }) => {
   const [user, setUser] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
+   
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -407,8 +394,45 @@ const AdminPanel = ({
   const [goalForm, setGoalForm] = useState({});
 
   // --- GOAL LOGIC (FIRESTORE) ---
-  const handleEditGoal = (item) => { setGoalForm(item); setIsEditingGoal(true); };
-  const handleNewGoal = () => { setGoalForm({ tipo: 'Organizacional', diretoria: '', area: '', objetivo: '', kr: '', kpi: '', atingimento: 0, peso: 0, regua_0: '', regua_60: '', regua_100: '', regua_120: '', unidade: '', prazo: '', formula: '', resultado_mensal: 0, resultado_anual: 0, data_referencia: '' }); setIsEditingGoal(true); };
+  const handleEditGoal = (item) => { 
+     // Converte para yyyy-MM-dd para o input date funcionar corretamente
+     let formattedDate = item.data_referencia || '';
+     if (formattedDate && formattedDate.includes('/')) {
+         const [day, month, year] = formattedDate.split('/');
+         formattedDate = `${year}-${month}-${day}`;
+     }
+     setGoalForm({ 
+        ...item, 
+        data_referencia: formattedDate,
+        status: item.status || 'Em andamento'
+     }); 
+     setIsEditingGoal(true); 
+  };
+
+  const handleNewGoal = () => { 
+      setGoalForm({ 
+          tipo: 'Organizacional', 
+          diretoria: '', 
+          area: '', 
+          objetivo: '', 
+          kr: '', 
+          kpi: '', 
+          atingimento: 0, 
+          peso: 0, 
+          regua_0: '', 
+          regua_60: '', 
+          regua_100: '', 
+          regua_120: '', 
+          unidade: '', 
+          prazo: '', 
+          formula: '', 
+          resultado_mensal: 0, 
+          resultado_anual: 0, 
+          data_referencia: '',
+          status: 'Em andamento'
+      }); 
+      setIsEditingGoal(true); 
+  };
   
   const handleSaveGoal = async (e) => { 
     e.preventDefault(); 
@@ -455,7 +479,6 @@ const AdminPanel = ({
     if(!window.confirm('ATENÇÃO: Isso apagará TODAS as metas do banco de dados. Esta ação não pode ser desfeita. Continuar?')) return;
     setStatus({type:'loading', message:'Limpando banco de dados...'});
     try {
-      // 1. Fetch all documents fresh from Firestore to ensure we get everything
       const colRef = getCollectionRef('goals');
       const snapshot = await getDocs(colRef);
       
@@ -465,8 +488,6 @@ const AdminPanel = ({
       }
 
       const docsToDelete = snapshot.docs;
-      
-      // 2. Split into chunks of 400 (Firestore limit is 500 ops per batch)
       const chunkSize = 400; 
       const chunks = [];
 
@@ -476,7 +497,6 @@ const AdminPanel = ({
 
       let deletedCount = 0;
 
-      // 3. Process batches
       for (const chunk of chunks) {
         const batch = writeBatch(db);
         chunk.forEach(docSnapshot => {
@@ -496,7 +516,7 @@ const AdminPanel = ({
   // --- USER LOGIC (FIRESTORE) ---
   const [userForm, setUserForm] = useState({ user: '', pass: '', role: 'AREA', label: '', area: '' });
   const [editingUser, setEditingUser] = useState(null);
-  
+   
   const handleSaveUser = async (e) => {
     e.preventDefault();
     setStatus({type:'loading', message:'Salvando usuário...'});
@@ -514,7 +534,7 @@ const AdminPanel = ({
       setStatus({type:'error', message:'Erro ao salvar usuário.'});
     }
   };
-  
+   
   const handleDeleteUser = async (id) => { 
     if(window.confirm('Excluir usuário?')) {
        try {
@@ -542,7 +562,7 @@ const AdminPanel = ({
   }, [goals, users]);
 
   if (isEditingGoal) {
-     return (
+      return (
         <div className="bg-white rounded-xl shadow p-6">
           <div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold flex items-center gap-2"><Edit className="w-5 h-5" />{goalForm.id ? 'Editar Meta' : 'Nova Meta'}</h2><button onClick={() => setIsEditingGoal(false)} className="text-gray-500 hover:text-black"><X className="w-6 h-6" /></button></div>
           <form onSubmit={handleSaveGoal} className="space-y-6">
@@ -557,13 +577,25 @@ const AdminPanel = ({
               <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Diretoria</label><input type="text" name="diretoria" value={goalForm.diretoria} onChange={handleGoalChange} className="w-full p-2 border rounded" required /></div>
               <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Área</label><input type="text" name="area" value={goalForm.area} onChange={handleGoalChange} className="w-full p-2 border rounded" required /></div>
             </div>
+            
+            {/* NOVO: DATA DE REFERÊNCIA E STATUS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">KPI</label><input type="text" name="kpi" value={goalForm.kpi} onChange={handleGoalChange} className="w-full p-2 border rounded" required /></div>
+                <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Data Referência</label><input type="date" name="data_referencia" value={goalForm.data_referencia} onChange={handleGoalChange} className="w-full p-2 border rounded" /></div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Status</label>
+                  <select name="status" value={goalForm.status} onChange={handleGoalChange} className="w-full p-2 border rounded">
+                      <option value="Em andamento">Em andamento</option>
+                      <option value="Concluída">Concluída</option>
+                  </select>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">KPI</label><input type="text" name="kpi" value={goalForm.kpi} onChange={handleGoalChange} className="w-full p-2 border rounded" required /></div>
                <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Objetivo</label><input type="text" name="objetivo" value={goalForm.objetivo} onChange={handleGoalChange} className="w-full p-2 border rounded" /></div>
+               <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">KR (Key Result)</label><input type="text" name="kr" value={goalForm.kr} onChange={handleGoalChange} className="w-full p-2 border rounded" placeholder="Descrição do resultado chave" /></div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-              <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">KR (Key Result)</label><input type="text" name="kr" value={goalForm.kr} onChange={handleGoalChange} className="w-full p-2 border rounded" placeholder="Descrição do resultado chave" /></div>
-            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Peso</label><input type="text" name="peso" value={goalForm.peso} onChange={handleGoalChange} className="w-full p-2 border rounded" /></div>
                <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Atingimento</label><input type="text" name="atingimento" value={goalForm.atingimento} onChange={handleGoalChange} className="w-full p-2 border rounded" /></div>
@@ -573,7 +605,7 @@ const AdminPanel = ({
             <div className="flex justify-end gap-3 pt-4 border-t"><button type="button" onClick={() => setIsEditingGoal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancelar</button><button type="submit" className="px-6 py-2 bg-black text-white rounded font-bold hover:bg-gray-800 flex items-center gap-2"><Save className="w-4 h-4" /> Salvar</button></div>
           </form>
         </div>
-     );
+      );
   }
 
   return (
@@ -592,18 +624,18 @@ const AdminPanel = ({
 
        {/* DEBUG INFO BOX */}
        <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 flex flex-col gap-2 text-xs">
-          <div className="flex items-center gap-2 font-bold text-gray-700">
-            <Search className="w-4 h-4" /> Diagnóstico de Banco de Dados
-          </div>
-          <p className="text-gray-600">
-            Seus dados estão salvos no Firestore no seguinte caminho:
-          </p>
-          <code className="block bg-black text-green-400 p-3 rounded font-mono break-all">
-            artifacts / <span className="text-white font-bold">{getAppId()}</span> / public / data / goals
-          </code>
-          <p className="text-gray-500 italic mt-1">
-            * Se não encontrar a coleção "artifacts" na raiz, clique em "Iniciar coleção", digite "artifacts" e cancele. Isso força o console a mostrar pastas ocultas.
-          </p>
+         <div className="flex items-center gap-2 font-bold text-gray-700">
+           <Search className="w-4 h-4" /> Diagnóstico de Banco de Dados
+         </div>
+         <p className="text-gray-600">
+           Seus dados estão salvos no Firestore no seguinte caminho:
+         </p>
+         <code className="block bg-black text-green-400 p-3 rounded font-mono break-all">
+           artifacts / <span className="text-white font-bold">{getAppId()}</span> / public / data / goals
+         </code>
+         <p className="text-gray-500 italic mt-1">
+           * Se não encontrar a coleção "artifacts" na raiz, clique em "Iniciar coleção", digite "artifacts" e cancele. Isso força o console a mostrar pastas ocultas.
+         </p>
        </div>
 
        {/* TAB: METAS */}
@@ -619,7 +651,16 @@ const AdminPanel = ({
            <div className="overflow-x-auto">
              <table className="w-full text-left text-sm">
                <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs">
-                 <tr><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Área</th><th className="px-4 py-3">KR / KPI</th><th className="px-4 py-3 text-center">Peso</th><th className="px-4 py-3 text-center">Ating.</th><th className="px-4 py-3 text-right">Ações</th></tr>
+                 <tr>
+                   <th className="px-4 py-3">Tipo</th>
+                   <th className="px-4 py-3">Área</th>
+                   <th className="px-4 py-3">KR / KPI</th>
+                   <th className="px-4 py-3">Ref.</th>
+                   <th className="px-4 py-3 text-center">Status</th>
+                   <th className="px-4 py-3 text-center">Peso</th>
+                   <th className="px-4 py-3 text-center">Ating.</th>
+                   <th className="px-4 py-3 text-right">Ações</th>
+                 </tr>
                </thead>
                <tbody className="divide-y divide-gray-100">
                  {goals.map(item => (
@@ -627,6 +668,12 @@ const AdminPanel = ({
                      <td className="px-4 py-3"><span className="text-xs font-bold text-gray-500">{item.tipo}</span></td>
                      <td className="px-4 py-3 font-medium">{item.area}</td>
                      <td className="px-4 py-3 font-bold text-gray-900">{item.kr || item.kpi}</td>
+                     <td className="px-4 py-3 text-xs text-gray-500">{safeDateDisplay(item.data_referencia)}</td>
+                     <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${item.status === 'Concluída' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                            {item.status || 'Em andamento'}
+                        </span>
+                     </td>
                      <td className="px-4 py-3 text-center">{item.peso}%</td>
                      <td className="px-4 py-3 text-center">{item.atingimento}%</td>
                      <td className="px-4 py-3 text-right flex justify-end gap-2">
@@ -652,7 +699,7 @@ const AdminPanel = ({
                <div><label className="block text-xs font-bold text-gray-500 mb-1">Nome/Label</label><input type="text" className="w-full p-2 border rounded" value={userForm.label} onChange={e => setUserForm({...userForm, label: e.target.value})} required placeholder="Ex: Diretoria Financeira" /></div>
                <div><label className="block text-xs font-bold text-gray-500 mb-1">Perfil</label><select className="w-full p-2 border rounded" value={userForm.role} onChange={e => setUserForm({...userForm, role: e.target.value})}><option value="AREA">Área (Comum)</option><option value="CEO">CEO</option><option value="ADMIN">Admin</option></select></div>
                {userForm.role === 'AREA' && (
-                  <div><label className="block text-xs font-bold text-gray-500 mb-1">Área Vinculada</label><input type="text" className="w-full p-2 border rounded" value={userForm.area} onChange={e => setUserForm({...userForm, area: e.target.value})} placeholder="Nome EXATO da área" /></div>
+                 <div><label className="block text-xs font-bold text-gray-500 mb-1">Área Vinculada</label><input type="text" className="w-full p-2 border rounded" value={userForm.area} onChange={e => setUserForm({...userForm, area: e.target.value})} placeholder="Nome EXATO da área" /></div>
                )}
                <div className="pt-2 flex gap-2">
                  <button type="submit" className="flex-1 bg-black text-white py-2 rounded font-bold hover:bg-gray-800">Salvar</button>
@@ -883,7 +930,52 @@ export default function App() {
         for (const chunk of chunks) {
             const batch = writeBatch(db);
             chunk.forEach((values) => {
-                 const obj = {}; headers.forEach((header, index) => { let value = values[index] || ''; let key = (header || '').toLowerCase().trim(); if(key.includes('kpi') || key.includes('indicador')) key = 'kpi'; else if(key.includes('peso')) key = 'peso'; else if(key.includes('atingimento')) key = 'atingimento'; else if(key.includes('diretoria')) key = 'diretoria'; else if(key.includes('tipo')) key = 'tipo'; else if(key.includes('área') || key.includes('area')) key = 'area'; else if(key.includes('mensal') || key.includes('realizado_mes') || key === 'mes') key = 'resultado_mensal'; else if(key.includes('anual') || key.includes('ytd') || key.includes('acumulado') || key.includes('realizado_ano')) key = 'resultado_anual'; else if(key.includes('data') || key.includes('ref')) key = 'data_referencia'; else if(key.includes('kr') || key.includes('key result') || key.includes('resultado chave')) key = 'kr'; else key = header; if (['id', 'atingimento', 'peso', 'resultado_mensal', 'resultado_anual'].includes(key)) { const num = cleanNumber(value); if (['atingimento', 'peso'].includes(key) && !String(value).includes('%') && num <= 2.0 && num !== 0) { obj[key] = num * 100; } else { obj[key] = num; } } else if (key === 'data_referencia') { if (typeof value === 'string' && value.match(/^\d{2}\/\d{2}\/\d{4}$/)) { const [day, month, year] = value.split('/'); obj[key] = `${year}-${month}-${day}`; } else { obj[key] = value; } } else { obj[key] = value || ''; } });
+                 const obj = {}; 
+                 headers.forEach((header, index) => { 
+                    let value = values[index] || ''; 
+                    let key = (header || '').toLowerCase().trim(); 
+                    if(key.includes('kpi') || key.includes('indicador')) key = 'kpi'; 
+                    else if(key.includes('peso')) key = 'peso'; 
+                    else if(key.includes('atingimento')) key = 'atingimento'; 
+                    else if(key.includes('diretoria')) key = 'diretoria'; 
+                    else if(key.includes('tipo')) key = 'tipo'; 
+                    else if(key.includes('área') || key.includes('area')) key = 'area'; 
+                    else if(key.includes('mensal') || key.includes('realizado_mes') || key === 'mes') key = 'resultado_mensal'; 
+                    else if(key.includes('anual') || key.includes('ytd') || key.includes('acumulado') || key.includes('realizado_ano')) key = 'resultado_anual'; 
+                    else if(key.includes('data') || key.includes('ref')) key = 'data_referencia'; 
+                    else if(key.includes('kr') || key.includes('key result') || key.includes('resultado chave')) key = 'kr'; 
+                    else key = header; 
+                    
+                    if (['id', 'atingimento', 'peso', 'resultado_mensal', 'resultado_anual'].includes(key)) { 
+                        const num = cleanNumber(value); 
+                        if (['atingimento', 'peso'].includes(key) && !String(value).includes('%') && num <= 2.0 && num !== 0) { 
+                            obj[key] = num * 100; 
+                        } else { 
+                            obj[key] = num; 
+                        } 
+                    } else if (key === 'data_referencia') { 
+                        if (typeof value === 'string' && value.match(/^\d{2}\/\d{2}\/\d{4}$/)) { 
+                            const [day, month, year] = value.split('/'); 
+                            obj[key] = `${year}-${month}-${day}`; 
+                        } else { 
+                            obj[key] = value; 
+                        } 
+                    } else { 
+                        obj[key] = value || ''; 
+                    } 
+                 });
+
+                 // Lógica Automática de Status: Se atingimento >= 100, Concluída.
+                 if (obj.atingimento !== undefined) {
+                    const val = Number(obj.atingimento);
+                    if (!isNaN(val)) {
+                        obj.status = val >= 100 ? 'Concluída' : 'Em andamento';
+                    } else {
+                        obj.status = 'Em andamento';
+                    }
+                 } else {
+                    obj.status = 'Em andamento';
+                 }
                  
                  // Create ref with auto-ID
                  const ref = doc(getCollectionRef('goals'));
