@@ -354,13 +354,17 @@ const LoginScreen = ({ onLogin, users }) => {
     
     // Login de emergência caso o banco esteja vazio
     if (users.length === 0 && user === 'admin' && password === 'admin') {
-      onLogin({ id: 'temp-admin', user: 'admin', role: 'ADMIN', label: 'Admin Temporário', area: 'Todas' });
+      const adminUser = { id: 'temp-admin', user: 'admin', role: 'ADMIN', label: 'Admin Temporário', area: 'Todas' };
+      onLogin(adminUser);
       return;
     }
 
     const found = users.find(u => u.user === user && u.pass === password);
-    if (found) onLogin(found);
-    else setError('Credenciais inválidas.');
+    if (found) {
+        onLogin(found);
+    } else {
+        setError('Credenciais inválidas.');
+    }
   };
 
   return (
@@ -766,12 +770,32 @@ export default function App() {
   const [users, setUsers] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [firebaseUser, setFirebaseUser] = useState(null);
-   
-  const [user, setUser] = useState(null); // Local user state (app login)
+  
+  // LOGIN PERSISTENCE: Read from localStorage on mount
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('saf_user_session');
+    return saved ? JSON.parse(saved) : null;
+  });
+  
   const [activeTab, setActiveTab] = useState('company'); 
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState({ type: 'idle', message: '' });
   
+  // Handle Login and save to localStorage
+  const handleLogin = (u) => {
+    localStorage.setItem('saf_user_session', JSON.stringify(u));
+    setUser(u);
+    if(u.role === 'ADMIN') setActiveTab('admin'); 
+    else if(u.role === 'CEO') setActiveTab('overview'); 
+    else setActiveTab('company');
+  };
+
+  // Handle Logout and clear localStorage
+  const handleLogout = () => {
+    localStorage.removeItem('saf_user_session');
+    setUser(null);
+  };
+
   // --- FIREBASE SYNC ---
   // 1. Authenticate with Firebase first
   useEffect(() => {
@@ -997,7 +1021,7 @@ export default function App() {
   // Waiting for Auth
   if (!firebaseUser) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-gray-500" /></div>;
 
-  if (!user) return <LoginScreen onLogin={(u) => { setUser(u); if(u.role === 'ADMIN') setActiveTab('admin'); else if(u.role === 'CEO') setActiveTab('overview'); else setActiveTab('company'); }} users={users} />;
+  if (!user) return <LoginScreen onLogin={handleLogin} users={users} />;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
@@ -1006,7 +1030,7 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-4"><div className="bg-black text-white w-8 h-8 rounded flex items-center justify-center font-bold">B</div><div><h1 className="text-lg font-bold text-gray-900 leading-tight">Portal de Metas</h1><p className="text-xs text-gray-500">Logado como: <span className="font-semibold text-black">{user.label}</span></p></div></div>
-          <div className="flex items-center space-x-2"><button onClick={handleExport} className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full" title="Exportar CSV"><Download className="w-5 h-5" /></button><button onClick={handleImportClick} className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full" title="Importar CSV"><Upload className="w-5 h-5" /></button><div className="h-6 w-px bg-gray-200 mx-2"></div><button onClick={() => setUser(null)} className="flex items-center text-sm font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"><LogOut className="w-4 h-4 mr-2" /> Sair</button></div>
+          <div className="flex items-center space-x-2"><button onClick={handleExport} className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full" title="Exportar CSV"><Download className="w-5 h-5" /></button><button onClick={handleImportClick} className="p-2 text-gray-500 hover:text-black hover:bg-gray-100 rounded-full" title="Importar CSV"><Upload className="w-5 h-5" /></button><div className="h-6 w-px bg-gray-200 mx-2"></div><button onClick={handleLogout} className="flex items-center text-sm font-medium text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"><LogOut className="w-4 h-4 mr-2" /> Sair</button></div>
         </div>
       </header>
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
