@@ -308,7 +308,7 @@ const GoalCard = ({ goal, history }) => {
                 )}
                 {isConcluida && !isWorldCup && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 gap-1 whitespace-nowrap">
-                    <CheckCircle2 className="w-3 h-3" /> OK
+                    <CheckCircle2 className="w-3 h-3" /> Concluida
                 </span>
                 )}
             </div>
