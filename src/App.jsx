@@ -305,7 +305,7 @@ const GoalCard = ({ goal, history }) => {
                 )}
                 {isConcluida && !isWorldCup && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 gap-1 whitespace-nowrap">
-                    <CheckCircle2 className="w-3 h-3" /> Concluído
+                    <CheckCircle2 className="w-3 h-3" /> OK
                 </span>
                 )}
             </div>
@@ -345,6 +345,7 @@ const GoalCard = ({ goal, history }) => {
             <div className="mb-1 flex justify-between items-end">
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Atingimento</span>
                 <span className={`text-lg font-bold ${goal.atingimento >= 100 ? 'text-emerald-600' : goal.atingimento >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+                    {goal.atingimento}%
                 </span>
             </div>
             <Ruler value={goal.atingimento} />
@@ -440,6 +441,7 @@ const AreaScoreTable = ({ goals, finalScore }) => {
           <thead className="text-[10px] text-gray-400 uppercase font-semibold bg-gray-50/50 border-b border-gray-100">
             <tr>
               <th className="px-6 py-2">Meta / KPI</th>
+              <th className="px-6 py-2 text-center">Status</th>
               <th className="px-6 py-2 text-right">Resultado</th>
               <th className="px-6 py-2 text-center">Atingimento</th>
               <th className="px-6 py-2 text-center">Peso</th>
@@ -453,6 +455,11 @@ const AreaScoreTable = ({ goals, finalScore }) => {
                 <tr key={goal.id} className="hover:bg-gray-50/50 transition-colors group">
                   <td className="px-6 py-2 font-medium text-gray-700 group-hover:text-black transition-colors break-words">
                     {goal.kr || goal.kpi}
+                  </td>
+                  <td className="px-6 py-2 text-center">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border ${goal.status === 'Concluída' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                        {goal.status || 'Em andamento'}
+                    </span>
                   </td>
                   <td className="px-6 py-2 text-right font-mono text-gray-500 whitespace-nowrap">
                     {formatSmart(goal.resultado_anual, goal.unidade)}
@@ -468,7 +475,7 @@ const AreaScoreTable = ({ goals, finalScore }) => {
               ); 
             })}
             <tr className="bg-gray-50/50 border-t border-gray-100">
-              <td className="px-6 py-2 font-bold text-gray-900 uppercase text-[10px] tracking-widest" colSpan={4}>Resultado Final Ponderado</td>
+              <td className="px-6 py-2 font-bold text-gray-900 uppercase text-[10px] tracking-widest" colSpan={5}>Resultado Final Ponderado</td>
               <td className="px-6 py-2 text-right">
                 <span className="text-xl font-bold text-gray-900">{finalScore}%</span>
               </td>
