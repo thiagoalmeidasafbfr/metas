@@ -54,6 +54,8 @@ import {
   signInWithCustomToken 
 } from "firebase/auth";
 
+import logoBotafogo from './assets/img/botafogologo.png'; 
+
 // --- CONFIGURAÇÃO FIREBASE ---
 const getFirebaseConfig = () => {
   if (typeof __firebase_config !== 'undefined') {
@@ -95,6 +97,7 @@ const getDocRef = (collectionName, id) => {
  */
 
 const GOAL_TYPES = [ "Global", "Organizacional", "Financeiro", "KPI / Processo", "Projetos" ];
+const LOGO_URL = logoBotafogo;
 
 const normalizeText = (text) => String(text || '').trim().toLowerCase();
 
@@ -345,7 +348,6 @@ const GoalCard = ({ goal, history }) => {
             <div className="mb-1 flex justify-between items-end">
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Atingimento</span>
                 <span className={`text-lg font-bold ${goal.atingimento >= 100 ? 'text-emerald-600' : goal.atingimento >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
-                    {goal.atingimento}%
                 </span>
             </div>
             <Ruler value={goal.atingimento} />
@@ -639,7 +641,9 @@ const LoginScreen = ({ onLogin, users }) => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-10 max-w-sm w-full transition-all">
         <div className="text-center mb-10">
-            <div className="bg-gray-900 text-white w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-6 text-2xl font-bold shadow-lg shadow-gray-200">B</div>
+            <div className="flex justify-center mb-8">
+                <img src={LOGO_URL} alt="Logo SAF Botafogo" className="h-20 w-auto object-contain drop-shadow-md" />
+            </div>
             <h1 className="text-xl font-bold text-gray-900">Portal de Performance</h1>
             <p className="text-sm text-gray-400 mt-1">SAF Botafogo</p>
         </div>
@@ -1186,7 +1190,9 @@ export default function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
         <div className="max-w-[95%] mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-5">
-            <div className="bg-gray-900 text-white w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shadow-gray-200">B</div>
+            <div className="bg-gray-900 text-white w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xl shadow-lg shadow-gray-200">
+                <img src={LOGO_URL} alt="Logo" className="w-8 h-8 object-contain" />
+            </div>
             <div>
                 <h1 className="text-lg font-bold text-gray-900 leading-none tracking-tight">Portal de Performance</h1>
                 <div className="flex items-center gap-2 mt-1">
