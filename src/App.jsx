@@ -275,14 +275,6 @@ const GlobalStyles = () => (
       from { opacity: 0; max-height: 0; }
       to { opacity: 1; max-height: 500px; }
     }
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes pulse-ring {
-      0% { transform: scale(0.9); opacity: 1; }
-      100% { transform: scale(1.3); opacity: 0; }
-    }
     @keyframes progressFill {
       from { width: 0%; }
     }
@@ -309,22 +301,18 @@ const GlobalStyles = () => (
       animation-delay: 0.3s;
     }
 
-    /* Glassmorphism card hover */
+    /* Card hover - lightweight */
     .glass-card {
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: all 0.3s var(--ease-smooth);
+      background: #fff;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
     .glass-card:hover {
-      background: rgba(255,255,255,0.95);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
-      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     }
 
     /* Input focus ring */
     input:focus, select:focus, textarea:focus {
-      box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.15);
+      border-color: #1D9BF0;
     }
 
     /* Badge pulse */
@@ -384,13 +372,12 @@ const AnimatedNumber = ({ value, suffix = '' }) => {
 const StatusDialog = ({ status, onClose }) => {
   if (status.type === 'idle') return null;
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 z-[200] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-sm w-full text-center animate-scale-in border border-gray-100">
         {status.type === 'loading' && (
           <div className="flex flex-col items-center">
             <div className="relative">
               <Loader2 className="w-12 h-12 text-[#1D9BF0] animate-spin" />
-              <div className="absolute inset-0 bg-[#1D9BF0]/10 rounded-full blur-xl"></div>
             </div>
             <h3 className="text-lg font-bold text-[#0F1419] mt-6">Processando</h3>
             <p className="text-[#536471] text-sm mt-2 leading-relaxed">{status.message}</p>
@@ -448,7 +435,7 @@ const ProjectDialog = ({ goal, milestones, onClose, onToggleMilestone }) => {
   const progress = totalWeight > 0 ? (completedWeight / totalWeight) * 100 : 0;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[150] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[150] flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="bg-gradient-to-r from-[#0F1419] to-[#1a2634] px-8 py-6 flex justify-between items-center shrink-0">
           <div>
@@ -543,20 +530,15 @@ const Ruler = ({ value }) => {
   return (
     <div className="mt-5 mb-3 w-full">
       <div className="relative h-3 bg-gray-100 rounded-full w-full overflow-visible">
-        {/* Track background with subtle gradient */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-gray-100 via-gray-50 to-gray-100"></div>
         
         {/* Filled bar */}
         <div 
-            className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 progress-animate ${colors.bar} shadow-sm`} 
+            className={`absolute top-0 left-0 h-full rounded-full transition-all duration-700 progress-animate ${colors.bar}`} 
             style={{ width: `${(displayValue / MAX_VAL) * 100}%` }}
         >
-          {/* Sheen effect on bar */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-          
           {/* Floating indicator */}
           <div className="absolute -right-1 top-1/2 -translate-y-1/2 z-20">
-            <div className={`relative w-5 h-5 rounded-full ${colors.bar} border-[3px] border-white shadow-lg ${colors.glow} shadow-md`}>
+            <div className={`relative w-5 h-5 rounded-full ${colors.bar} border-[3px] border-white shadow-md`}>
               <div className="absolute -top-9 left-1/2 -translate-x-1/2">
                 <div className="bg-[#0F1419] text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-lg whitespace-nowrap tabular-nums">
                   {value}%
@@ -635,7 +617,7 @@ const GoalCard = ({ goal, history, onOpenProject, index = 0 }) => {
 
         {/* Title section */}
         <div className="mb-5 flex-grow min-h-[5rem]">
-            <h3 className="text-[15px] font-bold text-[#0F1419] leading-snug tracking-tight break-words line-clamp-3 group-hover:text-[#1D9BF0] transition-colors" title={mainTitle}>{mainTitle}</h3>
+            <h3 className="text-[15px] font-bold text-[#0F1419] leading-snug tracking-tight break-words line-clamp-3 group-hover:text-[#1D9BF0] transition-colors duration-150" title={mainTitle}>{mainTitle}</h3>
             <p className="text-xs text-[#536471] mt-2 leading-relaxed break-words line-clamp-2" title={goal.objetivo}>{goal.objetivo}</p>
             {subTitle && <p className="text-[10px] text-[#8899A6] mt-2 flex items-center gap-1.5 break-words"><Target className="w-3 h-3 flex-shrink-0" /> {subTitle}</p>}
         </div>
@@ -911,7 +893,7 @@ const BonusCalculator = ({ companyResult, areaResult }) => {
 
         <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-8 flex flex-col justify-between relative overflow-hidden border border-gray-100">
             {!result.isEligible && (
-                <div className="absolute inset-0 bg-white/95 backdrop-blur-md z-10 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
+                <div className="absolute inset-0 bg-white/95 z-10 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
                     <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center border border-rose-100 mb-4">
                       <AlertCircle className="w-8 h-8 text-rose-500" />
                     </div>
@@ -976,18 +958,11 @@ const LoginScreen = ({ onLogin, users }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-40"></div>
-      </div>
-      
-      <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl shadow-gray-200/50 border border-gray-100 p-12 max-w-[380px] w-full relative animate-scale-in">
+      <div className="bg-white rounded-3xl shadow-2xl shadow-gray-200/50 border border-gray-100 p-12 max-w-[380px] w-full relative animate-scale-in">
         <div className="text-center mb-10">
             <div className="flex justify-center mb-8">
                 <div className="relative">
-                  <img src={LOGO_URL} alt="Logo SAF Botafogo" className="h-20 w-auto object-contain drop-shadow-xl" />
-                  <div className="absolute inset-0 bg-black/5 rounded-full blur-2xl scale-150"></div>
+                  <img src={LOGO_URL} alt="Logo SAF Botafogo" className="h-20 w-auto object-contain" />
                 </div>
             </div>
             <h1 className="text-xl font-black text-[#0F1419] tracking-tight">Portal de Performance</h1>
@@ -1657,7 +1632,6 @@ export default function App() {
       <div className="flex flex-col items-center animate-fade-in">
         <div className="relative">
           <Loader2 className="w-10 h-10 animate-spin text-[#1D9BF0]" />
-          <div className="absolute inset-0 bg-[#1D9BF0]/10 rounded-full blur-xl"></div>
         </div>
         <span className="text-[#8899A6] text-[10px] font-bold uppercase tracking-[0.2em] mt-4">Inicializando sistema</span>
       </div>
@@ -1677,7 +1651,7 @@ export default function App() {
       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".xlsx, .xls" />
       
       {/* HEADER */}
-      <header className="bg-white/90 backdrop-blur-xl border-b border-gray-200/80 sticky top-0 z-40 shadow-sm">
+      <header className="bg-white border-b border-gray-200/80 sticky top-0 z-40 shadow-sm">
         <div className="max-w-[95%] mx-auto px-6 h-[72px] flex items-center justify-between">
           <div className="flex items-center gap-5">
             <div className="w-11 h-11 rounded-xl bg-[#0F1419] flex items-center justify-center shadow-lg shadow-gray-300/30">
@@ -1688,7 +1662,6 @@ export default function App() {
                 <div className="flex items-center gap-2 mt-1.5">
                     <div className="relative">
                       <span className="w-2 h-2 bg-emerald-500 rounded-full block"></span>
-                      <span className="w-2 h-2 bg-emerald-400 rounded-full block absolute inset-0 animate-ping opacity-40"></span>
                     </div>
                     <p className="text-xs text-[#536471] font-semibold">{user.label}</p>
                 </div>
@@ -1736,8 +1709,6 @@ export default function App() {
           <div className="animate-fade-in space-y-10">
             {/* Hero Card */}
             <div className="bg-gradient-to-br from-[#0F1419] via-[#1a2634] to-[#0F1419] rounded-3xl p-10 text-white shadow-2xl shadow-gray-400/20 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-80 h-80 bg-white/[0.03] rounded-full -mr-20 -mt-20 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-60 h-60 bg-[#1D9BF0]/[0.06] rounded-full -ml-10 -mb-10 blur-3xl"></div>
                 <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-6">
                     <div>
                         <div className="flex items-center gap-2 mb-3">
@@ -1780,7 +1751,7 @@ export default function App() {
                     <p className="text-xl font-black text-[#0F1419]">Performance da Área</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-5xl font-black text-[#0F1419] tracking-tighter group-hover:scale-105 transition-transform tabular-nums">{areaResult}%</span>
+                    <span className="text-5xl font-black text-[#0F1419] tracking-tighter tabular-nums">{areaResult}%</span>
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${areaResult >= 100 ? 'bg-emerald-50 border border-emerald-100' : 'bg-amber-50 border border-amber-100'}`}>
                       <PieChart className={`w-7 h-7 stroke-[1.5] ${areaResult >= 100 ? 'text-emerald-500' : 'text-amber-500'}`} />
                     </div>
@@ -1793,7 +1764,7 @@ export default function App() {
                     <p className="text-xl font-black text-[#0F1419]">Gatilho Global</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className="text-5xl font-black text-[#0F1419] tracking-tighter group-hover:scale-105 transition-transform tabular-nums">{companyResult}%</span>
+                    <span className="text-5xl font-black text-[#0F1419] tracking-tighter tabular-nums">{companyResult}%</span>
                     <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center">
                       <BarChart3 className="w-7 h-7 text-[#1D9BF0] stroke-[1.5]" />
                     </div>
@@ -1839,7 +1810,7 @@ export default function App() {
                   <div key={card.label} className={`animate-fade-up stagger-${idx + 1} glass-card p-7 rounded-2xl border-2 border-gray-100 group`}>
                     <div className="flex items-center justify-between mb-5">
                         <h3 className="text-[#8899A6] text-[10px] font-bold uppercase tracking-[0.15em]">{card.label}</h3>
-                        <div className={`p-2.5 rounded-xl border ${card.iconBg} group-hover:scale-110 transition-transform`}>
+                        <div className={`p-2.5 rounded-xl border ${card.iconBg}`}>
                           <card.icon className={`w-5 h-5 ${card.iconColor}`} />
                         </div>
                     </div>
